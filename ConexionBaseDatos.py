@@ -1,3 +1,7 @@
+import psycopg2
+from psycopg2 import Error
+from typing import Optional
+
 class ConexionBaseDatos:
     def __init__(self):
         self.conexion = None
@@ -23,6 +27,18 @@ class ConexionBaseDatos:
             self.cursor.close()
         if self.conexion:
             self.conexion.close()
+
+    def execute_query(self, query: str, params: tuple = None) -> Optional[list]:
+        try:
+            self.cursor.execute(query, params)
+            if query.strip().upper().startswith(('SELECT', 'SHOW')):
+                return self.cursor.fetchall()
+            self.conexion.commit()
+            return None
+        except Error as e:
+            print(f"Error ejecutando query: {e}")
+            self.conexion.rollback()
+            return None
 
 class UsuariosAutentificados:
     def __init__(self, db: ConexionBaseDatos):
