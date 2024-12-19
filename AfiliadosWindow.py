@@ -6,14 +6,10 @@ from datetime import datetime
 
 class AfiliadosWindow:
     def __init__(self):
-        self.root = tk.Tk()
-        self.root.title("ADMINISTRADOR -> PESTAÑA AFILIADOS")
-        self.root.geometry("1200x700")
+        self.ventana_afiliados = tk.Tk()
+        self.ventana_afiliados.title("ADMINISTRADOR -> PESTAÑA AFILIADOS")
+        self.ventana_afiliados.geometry("1200x700")
         self.db = ConexionBaseDatos()
-
-        # Configurar el grid principal
-        self.root.grid_columnconfigure(0, weight=1)
-        self.root.grid_columnconfigure(1, weight=2)
 
         # Frame izquierdo para botones
         self.create_left_panel()
@@ -22,7 +18,7 @@ class AfiliadosWindow:
         self.create_right_panel()
 
     def create_left_panel(self):
-        left_frame = ttk.Frame(self.root, padding="20")
+        left_frame = ttk.Frame(self.ventana_afiliados, padding="20")
         left_frame.grid(row=0, column=0, sticky="nsew")
 
         # Header
@@ -65,7 +61,9 @@ class AfiliadosWindow:
         ).pack(fill=tk.X, pady=10)
 
     def create_right_panel(self):
-        right_frame = ttk.Frame(self.root, padding="20")
+        global right_frame
+        right_frame = ttk.Frame(self.ventana_afiliados, padding="20")
+
         right_frame.grid(row=0, column=1, sticky="nsew")
 
         # Título del formulario
@@ -120,16 +118,8 @@ class AfiliadosWindow:
         # Botones de acción
         buttons_frame = ttk.Frame(form_frame)
         buttons_frame.pack(pady=20)
-        ttk.Button(
-            buttons_frame,
-            text="Guardar Cambios",
-            command=self.guardar_cambios
-        ).pack(side=tk.LEFT, padx=5)
-        ttk.Button(
-            buttons_frame,
-            text="Cancelar",
-            command=self.limpiar_formulario
-        ).pack(side=tk.LEFT, padx=5)
+        ttk.Button(buttons_frame, text="Guardar Cambios", command=self.guardar_cambios).place(x = 100, y=100)
+        ttk.Button(buttons_frame,text="Cancelar",command=self.limpiar_formulario).pack(side=tk.LEFT, padx=5)
 
     def create_form_field(self, parent, label_text):
         field_frame = ttk.Frame(parent)
@@ -161,7 +151,7 @@ class AfiliadosWindow:
         messagebox.showinfo("Limpiar", "Limpiando formulario...")
 
     def run(self):
-        self.root.mainloop()
+        self.ventana_afiliados.mainloop()
 
 
 if __name__ == "__main__":

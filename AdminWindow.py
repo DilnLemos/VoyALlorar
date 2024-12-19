@@ -1,7 +1,8 @@
 import tkinter as tk
-from tkinter import ttk
+from tkinter import Image
 from tkinter import messagebox
 from AfiliadosWindow import AfiliadosWindow
+from ConexionBaseDatos import ConexionBaseDatos
 
 class AdminWindow:
     def __init__(self):
@@ -9,12 +10,14 @@ class AdminWindow:
         self.ventana_Admin.title("Panel de Administrador - EPS")
         self.ventana_Admin.geometry("800x600")
 
-
         # Header con información del administrador
         self.create_header()
 
         # Frame principal para los botones
         self.create_main_buttons()
+
+        # Conexión a la base de datos
+        self.db = ConexionBaseDatos()
 
     def create_header(self):
         header_frame = tk.Frame(self.ventana_Admin)
@@ -25,96 +28,150 @@ class AdminWindow:
         self.title_frame.pack(fill=tk.X)
 
         self.titulo_admin = tk.PhotoImage(file="titulo_admin.2.png")
-        self.label_titulo = tk.Label(self.ventana_Admin, image = self.titulo_admin, bd=0)
-        self.label_titulo.pack(padx=180, pady=10)
-
+        self.label_titulo = tk.Label(self.ventana_Admin, image=self.titulo_admin, bd=0)
+        self.label_titulo.pack(padx=180, pady=50)
 
     def create_main_buttons(self):
         frame_botones = tk.Frame(self.ventana_Admin)
         frame_botones.pack()
 
-
         # Primera fila de botones
-        self.create_menu_button(frame_botones, "AFILIADOS", "👤", 0, 0,
-            self.show_afiliados, "#90EE90"  # Verde claro
-        )
+        self.afiliados_imagen = tk.PhotoImage(file='AFILIADOS.png')
+        self.afiliado_Label = tk.Button(self.ventana_Admin, image=self.afiliados_imagen, bd=0, command=self.show_afiliados)
+        self.afiliado_Label.place(x=140, y=180)
 
-        self.create_menu_button(
-            frame_botones, "EMPRESAS", "⬠", 0, 1,
-            self.show_empresas, "#FFE4B5"  # Beige
-        )
+        self.afiliados_imagen2 = tk.PhotoImage(file='EMPRESAS.png')
+        self.afiliado_Label2 = tk.Button(self.ventana_Admin, image=self.afiliados_imagen2, bd=0, command=self.show_empresas)
+        self.afiliado_Label2.place(x=460, y=180)
 
-        # Segunda fila de botones
-        self.create_menu_button(
-            frame_botones, "IPS - ORDENES", "✚", 1, 0,
-            self.show_ips_ordenes, "#FFB6C1"  # Rosa claro
-        )
+        self.afiliados_imagen3 = tk.PhotoImage(file='ORDENES.png')
+        self.afiliado_Label3 = tk.Button(self.ventana_Admin, image=self.afiliados_imagen3, bd=0, command=self.show_ips_ordenes)
+        self.afiliado_Label3.place(x=140, y=280)
 
-        self.create_menu_button(
-            frame_botones, "CONTRATOS", "□", 1, 1,
-            self.show_contratos, "#87CEEB"  # Azul claro
-        )
+        self.afiliados_imagen4 = tk.PhotoImage(file='CONTRATOS.png')
+        self.afiliado_Label4 = tk.Button(self.ventana_Admin, image=self.afiliados_imagen4, bd=0, command=self.show_contratos)
+        self.afiliado_Label4.place(x=460, y=280)
 
-        # Botón de reportes (centrado en la última fila)
-        self.create_menu_button(
-            frame_botones, "GENERAR REPORTES", "★", 2, 0,
-            self.show_reportes, "#DDA0DD",  # Violeta claro
-            columnspan=2
-        )
-
-    def create_menu_button(self, parent, text, icon, row, column, command, color, columnspan=1):
-        # Frame para el botón con padding
-        button_frame = ttk.Frame(parent)
-        button_frame.grid(row=row, column=column, columnspan=columnspan,
-                          padx=10, pady=10, sticky="nsew")
-
-        # Crear un frame personalizado para el botón
-        custom_button = tk.Frame(
-            button_frame,
-            background=color,
-            relief="raised",
-            borderwidth=1
-        )
-        custom_button.pack(fill=tk.X, pady=5, padx=5)
-
-        # Hacer que todo el frame sea clickeable
-        custom_button.bind("<Button-1>", lambda e: command())
-
-        # Contenido del botón
-        button_content = tk.Frame(custom_button, background=color)
-        button_content.pack(padx=20, pady=10)
-
-        # Texto del botón
-        label = tk.Label(
-            button_content,
-            text=f"{text}  {icon}",
-            font=('Helvetica', 12),
-            background=color
-        )
-        label.pack()
+        self.afiliados_imagen5 = tk.PhotoImage(file='REPORTES.png')
+        self.afiliado_Label5 = tk.Button(self.ventana_Admin, image=self.afiliados_imagen5, bd=0, command=self.show_reportes)
+        self.afiliado_Label5.place(x=300, y=400)
 
     def show_afiliados(self):
-
         messagebox.showinfo("Afiliados", "Abriendo gestión de afiliados...")
         afiliados_window = AfiliadosWindow()
         afiliados_window.run()
-        # Aquí implementaremos la ventana de gestión de afiliados
 
     def show_empresas(self):
-        messagebox.showinfo("Empresas", "Abriendo gestión de empresas...")
-        # Aquí implementaremos la ventana de gestión de empresas
+        if not self.db.connect():
+            messagebox.showerror("Error", "No se pudo conectar a la base de datos")
+            return
+
+        empresas = self.db.execute_query("SELECT * FROM empresa")
+        self.db.disconnect()
+
+        if not empresas:
+            messagebox.showinfo("Empresas", "No hay empresas registradas.")
+            return
+
+        empresas_window = tk.Toplevel(self.ventana_Admin)
+        empresas_window.title("Empresas Registradas")
+        empresas_window.geometry("600x400")
+
+        # Crear scrollbar
+        scrollbar = tk.Scrollbar(empresas_window)
+        scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
+
+        # Crear lista
+        listbox = tk.Listbox(empresas_window, yscrollcommand=scrollbar.set, width=80, height=20)
+        for empresa in empresas:
+            listbox.insert(tk.END, f"ID: {empresa[0]}, Nombre: {empresa[1]}, Dirección: {empresa[2]}")
+        listbox.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
+
+        scrollbar.config(command=listbox.yview)
 
     def show_ips_ordenes(self):
-        messagebox.showinfo("IPS y Órdenes", "Abriendo gestión de IPS y órdenes...")
-        # Aquí implementaremos la ventana de gestión de IPS y órdenes
+        if not self.db.connect():
+            messagebox.showerror("Error", "No se pudo conectar a la base de datos")
+            return
+
+        ordenes = self.db.execute_query("SELECT * FROM ips")
+        self.db.disconnect()
+
+        if not ordenes:
+            messagebox.showinfo("IPS y Órdenes", "No hay órdenes registradas.")
+            return
+
+        ips_window = tk.Toplevel(self.ventana_Admin)
+        ips_window.title("Órdenes Registradas")
+        ips_window.geometry("600x400")
+
+        # Crear scrollbar
+        scrollbar = tk.Scrollbar(ips_window)
+        scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
+
+        # Crear lista
+        listbox = tk.Listbox(ips_window, yscrollcommand=scrollbar.set, width=80, height=20)
+        for orden in ordenes:
+            listbox.insert(tk.END, f"ID: {orden[0]}, Detalle: {orden[1]}, Fecha: {orden[2]}")
+        listbox.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
+
+        scrollbar.config(command=listbox.yview)
 
     def show_contratos(self):
-        messagebox.showinfo("Contratos", "Abriendo gestión de contratos...")
-        # Aquí implementaremos la ventana de gestión de contratos
+        if not self.db.connect():
+            messagebox.showerror("Error", "No se pudo conectar a la base de datos")
+            return
+
+        contratos = self.db.execute_query("SELECT * FROM contrato")
+        self.db.disconnect()
+
+        if not contratos:
+            messagebox.showinfo("Contratos", "No hay contratos registrados.")
+            return
+
+        contratos_window = tk.Toplevel(self.ventana_Admin)
+        contratos_window.title("Contratos Registrados")
+        contratos_window.geometry("600x400")
+
+        # Crear scrollbar
+        scrollbar = tk.Scrollbar(contratos_window)
+        scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
+
+        # Crear lista
+        listbox = tk.Listbox(contratos_window, yscrollcommand=scrollbar.set, width=80, height=20)
+        for contrato in contratos:
+            listbox.insert(tk.END, f"ID: {contrato[0]}, Detalle: {contrato[1]}, Fecha: {contrato[2]}")
+        listbox.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
+
+        scrollbar.config(command=listbox.yview)
 
     def show_reportes(self):
-        messagebox.showinfo("Reportes", "Abriendo generación de reportes...")
-        # Aquí implementaremos la ventana de generación de reportes
+        if not self.db.connect():
+            messagebox.showerror("Error", "No se pudo conectar a la base de datos")
+            return
+
+        reportes = self.db.execute_query("SELECT * FROM pago_aporte")
+        self.db.disconnect()
+
+        if not reportes:
+            messagebox.showinfo("Reportes", "No hay reportes registrados.")
+            return
+
+        reportes_window = tk.Toplevel(self.ventana_Admin)
+        reportes_window.title("Reportes Registrados")
+        reportes_window.geometry("600x400")
+
+        # Crear scrollbar
+        scrollbar = tk.Scrollbar(reportes_window)
+        scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
+
+        # Crear lista
+        listbox = tk.Listbox(reportes_window, yscrollcommand=scrollbar.set, width=80, height=20)
+        for reporte in reportes:
+            listbox.insert(tk.END, f"ID: {reporte[0]}, Detalle: {reporte[1]}, Fecha: {reporte[2]}")
+        listbox.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
+
+        scrollbar.config(command=listbox.yview)
 
     def run(self):
         self.ventana_Admin.mainloop()
